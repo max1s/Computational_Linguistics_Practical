@@ -25,7 +25,7 @@ namespace CLP
 
 
 
-		public WordTagDict ParseText()
+		public WordTagDict ParseText(string testException)
 		{
 			var wtd = new WordTagDict ();
 			var fileRoot = @"C:\Users\Max\Documents\treeBank\treeBank";
@@ -36,6 +36,8 @@ namespace CLP
 
 				foreach(var file in subDirectory.GetFiles())
 				{
+					if(file.Name.Contains(testException))
+						continue;
 					var lines = File.ReadAllLines (file.FullName);
 					foreach (string line in lines)
 					{
