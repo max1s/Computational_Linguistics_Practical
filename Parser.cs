@@ -25,9 +25,9 @@ namespace CLP
 
 
 
-		public MultiKeyDictionary<string, string, float> ParseText()
+		public WordTagDict ParseText()
 		{
-			var mkd = new MultiKeyDictionary<string, string, float> ();
+			var wtd = new WordTagDict ();
 			var fileRoot = @"C:\Users\Max\Documents\treeBank\treeBank";
 			var directory = new DirectoryInfo(fileRoot);
 
@@ -63,17 +63,14 @@ namespace CLP
 								posTag += c;
 						}
 
-						if (mkd.ContainsKey (word) && mkd.ContainsKey (posTag))
-						{
-
-						}
+						wtd.Add (word, posTag);
+							
 
 					}
 						
 				}
 			}
-
-			return mkd;
+			return wtd;	
 		}
 	}
 }
