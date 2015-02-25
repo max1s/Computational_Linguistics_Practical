@@ -1,107 +1,129 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace CLP
 {
 	public class WordTagDict
 	{
-		internal  Dictionary<string, Dictionary<string, int>> wordDictionary = new Dictionary<string, Dictionary<string, int>>();
-		internal  Dictionary<string,  Dictionary<string, int>> tagDictionary = new Dictionary<string, Dictionary<string, int>>();
-		//internal  Dictionary<string, string> wordtoTagMapping = new Dictionary<string, string>();
+		internal  Dictionary<string, Dictionary<string, float>> wordEmissionDictionary = new Dictionary<string, Dictionary<string, float>>();
+		internal  Dictionary<string,  Dictionary<string, float>> tagTransitionDictionary = new Dictionary<string, Dictionary<string, float>>();
+
 
 		public WordTagDict ()
 		{
 		}
 
-		public List<Tuple<string, int>> this[string word]
+        public List<string> Keys
+        {
+            get
+            {
+                return wordEmissionDictionary.Keys.ToList();
+            }
+        }
+
+		public Dictionary<string, float> this[string tag, bool emission]
 		{
 			get
 			{
-				var values = new List<Tuple<string, int>>();
-				if (wordDictionary.ContainsKey(word))
-				{
-					foreach (KeyValuePair<string, Dictionary<string,int>> item in tagDictionary)
-					{
-						if (item.Value.ContainsKey(word))
-						{
-							values.Add( new Tuple<string, int>(item.Key, tagDictionary[item.Key][word]));
-						}
+                if(emission)
+                {
+                    return wordEmissionDictionary[tag];
+                }
+                else
+                {
+                    return tagTransitionDictionary[tag];
+                }
 
-					}
-					return values;
-				}
-				if (tagDictionary.ContainsKey (word))
-				{
-					foreach (KeyValuePair<string, Dictionary<string,int>> item in wordDictionary)
-					{
-						if (item.Value.ContainsKey(word))
-						{
-							values.Add( new Tuple<string, int>(item.Key, wordDictionary[item.Key][word]));
-						}
-
-					}
-					return values;
-				}
-
-
-				throw new KeyNotFoundException("word/key not found: " + word.ToString());
+                throw new KeyNotFoundException("tag/word not found :( . :" + tag.ToString());
+				
 			}
+           
 		}
 
-		public int this[string word, string tag]
+
+        public void EditWordEmission(string tag, string word)
+        {
+            if (wordEmissionDictionary.ContainsKey(tag))
+            {
+                if (wordEmissionDictionary[tag].ContainsKey(word))
+                {
+                    wordEmissionDictionary[tag][word] += 1f;
+                }
+                else
+                {
+                    wordEmissionDictionary[tag].Add(word, 1f);
+                }
+
+            }
+            else
+            {
+                Dictionary<string, float> temp = new Dictionary<string, float>();
+                temp.Add(word, 1);
+                wordEmissionDictionary.Add(tag, temp );
+            }
+        }
+
+		public void EditTransition(string thisTag, string thatTag)
 		{
-			get
-			{
-				if ((wordDictionary.ContainsKey (word) && tagDictionary.ContainsKey (tag)) ||
-				   (wordDictionary.ContainsKey (tag) && tagDictionary.ContainsKey (word)))
-				{
-					return wordDictionary.ContainsKey (word) ? wordDictionary [word] [tag] : wordDictionary [tag] [word];
-				}
+            if (tagTransitionDictionary.ContainsKey(thisTag))
+            {
+                if (tagTransitionDictionary[thisTag].ContainsKey(thatTag))
+                {
+                    tagTransitionDictionary[thisTag][thatTag] += 1f;
+                }
+                else
+                {
+                    tagTransitionDictionary[thisTag].Add(thatTag, 1f);
+                }
 
-				throw new KeyNotFoundException("word/key not found: " + word.ToString() + tag.ToString());
-			}
+            }
+            else
+            {
+                Dictionary<string, float> temp = new Dictionary<string, float>();
+                temp.Add(thatTag, 1);
+                tagTransitionDictionary.Add(thisTag, temp);
+            }
 		}
 
-		public void Add(string word, string tag)
-		{
-			if (wordDictionary.ContainsKey (word) && tagDictionary.ContainsKey (tag)) 
-			{
-				Edit (word, tag);
-				return;
-			}
-			if (wordDictionary.ContainsKey (word))
-			{
-				wordDictionary[word].Add (tag, 1);
-				var val = new Dictionary<string,int> ();
-				val.Add (word, 1);
-				tagDictionary.Add (tag, val);
-				return;
-			}
-			if (tagDictionary.ContainsKey (tag))
-			{
-				tagDictionary [tag].Add (word, 1);
-				var val = new Dictionary<string,int> ();
-				val.Add (tag, 1);
-				wordDictionary.Add (word, val);
-				return;
-			}
-			var val1 = new Dictionary<string,int> ();
-			val1.Add (tag, 1);
-			var val2 = new Dictionary<string,int> ();
-			val2.Add (word, 1);
+        public void NormalizeDictionary()
+        {
 
-			wordDictionary.Add (word, val1);
-			tagDictionary.Add (tag, val2);
-		}
+            var keys = new List<string>(wordEmissionDictionary.Keys);
+            foreach (var key in keys)
+            {
+                var innerKeys = new List<string>(wordEmissionDictionary[key].Keys);
 
-		public void Edit(string word, string tag)
-		{
-			Console.WriteLine (word + " " + tag);
-			wordDictionary [word] [tag] += 1;
-			tagDictionary [tag] [word] += 1;
+                var total = wordEmissionDictionary[key].Values.Sum();
 
-		}
+                foreach(var word in innerKeys)
+                {
+                    wordEmissionDictionary[key][word] /= total;
+                }
+            }
 
+            var otherKeys = new List<string>(tagTransitionDictionary.Keys);
+            foreach (var key in otherKeys)
+            {
+                var innerKeys = new List<string>(tagTransitionDictionary[key].Keys);
+
+                var total = tagTransitionDictionary[key].Values.Sum();
+
+                foreach (var word in innerKeys)
+                {
+                    tagTransitionDictionary[key][word] /= total;
+                }
+            }
+
+
+        }
+    /*    var dictionary = new Dictionary<string, double>();
+var keys = new List<string>(dictionary.Keys);
+foreach (string key in keys)
+{
+   dictionary[key] = Math.Round(dictionary[key], 3);
+} */
 
 	}
 }

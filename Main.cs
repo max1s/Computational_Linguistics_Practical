@@ -6,9 +6,9 @@ namespace CLP
 	{
 		static int Main(string[] args)
 		{
-			Parser parser = new Parser ();
-			parser.ParseText ();
-			return 0;
+            Viterbi v = new Viterbi("", "12");
+            v.Test();
+            return 0;
 		}
 	}
 }

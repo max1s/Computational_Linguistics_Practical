@@ -1,79 +1,94 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-
+using System.Text.RegularExpressions;
+using System.Collections.Generic;
 namespace CLP
 {
-	public class Parser
-	{
+    public class Parser
+    {
 
-		struct Key 
-		{
-			public readonly string myWord;
-			public readonly string myPosTag;
-			public Key(string word, string posTag) 
-			{
-				myWord = word;
-				myPosTag = posTag;
-			}
-		
-		}
-
-		public Parser ()
-		{
-		}
+        public Parser()
+        {
+        }
 
 
 
-		public WordTagDict ParseText(string testException)
+        public List<Tuple<string,string>> ParseTrainingText(string testNumber)
+        {
+            List<Tuple<string, string>> text = new List<Tuple<string, string>>();
+            var fileRoot = @"C:\\Users\\Max1s\\Dropbox\\CompLing\\CompLing\\treeBank\\" + testNumber;
+            var directory = new DirectoryInfo(fileRoot);
+            foreach (var file in directory.GetFiles())
+            {
+                var lines = File.ReadAllLines(file.FullName);
+                var word = "";
+                var tag = "";
+
+                foreach (string line in lines)
+                {
+                    Regex regPattern = new Regex(@"(\S)+/(\S)+");
+                    foreach (Match match in regPattern.Matches(line))
+                    {
+                        String[] vals = match.Value.Split('/');
+                        word = vals[0];
+                        tag = vals[1];
+                        text.Add(new Tuple<string,string>(vals[0], vals[1]));
+                    }
+
+                }
+
+            }
+            return text;
+        }
+
+        public WordTagDict ParseLearningText(string testException)
 		{
 			var wtd = new WordTagDict ();
-			var fileRoot = @"C:\Users\Max\Documents\treeBank\treeBank";
+            var fileRoot = @"C:\\Users\\Max1s\\Dropbox\\CompLing\\CompLing\\treeBank";
 			var directory = new DirectoryInfo(fileRoot);
-
 			foreach(var subDirectory in directory.GetDirectories())
 			{
+                if (subDirectory.Name.Contains(testException))
+                    continue;
 
 				foreach(var file in subDirectory.GetFiles())
 				{
-					if(file.Name.Contains(testException))
-						continue;
+
 					var lines = File.ReadAllLines (file.FullName);
+
+                    var previousTag = "START";
+				    var word = "";
+					var tag = "";
 					foreach (string line in lines)
 					{
-						var word = "";
-						var posTag = "";
-						var whichOne = false;
-
-						foreach (char c in line)
-						{
-
-							if (c == '['|| c == ']' ||c == ' ' ||c == '\u0039' ||  c == '\u0044' ||  c == '=' && !whichOne)
-								continue;
-							if (c == ' ' && whichOne)
-							{
-								whichOne = !whichOne;
-							}
-							if (c == '/')
-							{
-								whichOne = !whichOne;
-								continue;
-							}
-							if (!whichOne)
-								word += c;
-							if (whichOne)
-								posTag += c;
-						}
-
-						wtd.Add (word, posTag);
-							
-
+                        Regex regPattern = new Regex(@"(\S)+/(\S)+");
+                        foreach (Match match in regPattern.Matches(line))
+                        {
+                            String[] vals = match.Value.Split('/');
+                            word = vals[0];
+                            tag = vals[1];
+                            if (!(tag.All(x => char.IsUpper(x) || char.IsPunctuation(x))) 
+                                || tag.Equals("NNP&T") || tag.Equals("S") || tag.Equals("B") || tag.Equals("NNP&P") || tag.Equals("ABC"))
+                            {
+                                continue;
+                            }
+                            wtd.EditWordEmission(tag, word);
+                            //Debug.WriteLine(word + " " + tag);
+                            wtd.EditTransition(previousTag, tag);
+                            if (word.Equals("."))
+                                previousTag = "Start";
+                            else
+                                previousTag = tag;
+                        }
+					
 					}
 						
 				}
 			}
 			return wtd;	
 		}
-	}
+    }
 }
 
