@@ -7,8 +7,8 @@ namespace CLP
 {
 	public class WordTagDict
 	{
-		internal  Dictionary<string, Dictionary<string, float>> wordEmissionDictionary = new Dictionary<string, Dictionary<string, float>>();
-		internal  Dictionary<string,  Dictionary<string, float>> tagTransitionDictionary = new Dictionary<string, Dictionary<string, float>>();
+		internal  Dictionary<string, Dictionary<string, double>> wordEmissionDictionary = new Dictionary<string, Dictionary<string, double>>();
+		internal  Dictionary<string,  Dictionary<string, double>> tagTransitionDictionary = new Dictionary<string, Dictionary<string, double>>();
 
 
 		public WordTagDict ()
@@ -19,11 +19,11 @@ namespace CLP
         {
             get
             {
-                return wordEmissionDictionary.Keys.ToList();
+				return wordEmissionDictionary.Keys.ToList();
             }
         }
 
-		public Dictionary<string, float> this[string tag, bool emission]
+		public Dictionary<string, double> this[string tag, bool emission]
 		{
 			get
 			{
@@ -59,7 +59,7 @@ namespace CLP
             }
             else
             {
-                Dictionary<string, float> temp = new Dictionary<string, float>();
+                Dictionary<string, double> temp = new Dictionary<string, double>();
                 temp.Add(word, 1);
                 wordEmissionDictionary.Add(tag, temp );
             }
@@ -81,7 +81,7 @@ namespace CLP
             }
             else
             {
-                Dictionary<string, float> temp = new Dictionary<string, float>();
+                Dictionary<string, double> temp = new Dictionary<string, double>();
                 temp.Add(thatTag, 1);
                 tagTransitionDictionary.Add(thisTag, temp);
             }
@@ -99,7 +99,7 @@ namespace CLP
 
                 foreach(var word in innerKeys)
                 {
-                    wordEmissionDictionary[key][word] /= total;
+                    wordEmissionDictionary[key][word] =  (wordEmissionDictionary[key][word])/(total/100d);
                 }
             }
 
@@ -112,7 +112,7 @@ namespace CLP
 
                 foreach (var word in innerKeys)
                 {
-                    tagTransitionDictionary[key][word] /= total;
+                    tagTransitionDictionary[key][word] = (tagTransitionDictionary[key][word])/ (total/100d);
                 }
             }
 

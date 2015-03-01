@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CompLing;
+using System;
+using System.Diagnostics;
 
 namespace CLP
 {
@@ -6,8 +8,8 @@ namespace CLP
 	{
 		static int Main(string[] args)
 		{
-            Viterbi v = new Viterbi("", "12");
-            v.Test();
+            AutomatedTester.FullTest("test2.txt");
+            Console.ReadKey();
             return 0;
 		}
 	}

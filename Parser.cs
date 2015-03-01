@@ -2,8 +2,10 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
+
+
 namespace CLP
 {
     public class Parser
@@ -15,17 +17,18 @@ namespace CLP
 
 
 
-        public List<Tuple<string,string>> ParseTrainingText(string testNumber)
+        public List<List<Tuple<string,string>>> ParseUnseenText(string testNumber)
         {
-            List<Tuple<string, string>> text = new List<Tuple<string, string>>();
+            List<List<Tuple<string, string>>> text = new List<List<Tuple<string, string>>>();
             var fileRoot = @"C:\\Users\\Max1s\\Dropbox\\CompLing\\CompLing\\treeBank\\" + testNumber;
+			//var fileRoot = @"C:\\Users\\Max\\Documents\\treeBank\\treeBank\\" + testNumber;
             var directory = new DirectoryInfo(fileRoot);
             foreach (var file in directory.GetFiles())
             {
                 var lines = File.ReadAllLines(file.FullName);
                 var word = "";
                 var tag = "";
-
+                var sentence = new List<Tuple<string, string>>();
                 foreach (string line in lines)
                 {
                     Regex regPattern = new Regex(@"(\S)+/(\S)+");
@@ -34,7 +37,12 @@ namespace CLP
                         String[] vals = match.Value.Split('/');
                         word = vals[0];
                         tag = vals[1];
-                        text.Add(new Tuple<string,string>(vals[0], vals[1]));
+                        sentence.Add(new Tuple<string,string>(vals[0], vals[1]));
+                        if (word == ".")
+                        {
+                            text.Add(sentence);
+                            sentence = new List<Tuple<string, string>>();
+                        }
                     }
 
                 }
@@ -43,10 +51,11 @@ namespace CLP
             return text;
         }
 
-        public WordTagDict ParseLearningText(string testException)
+        public WordTagDict ParseTrainingText(string testException)
 		{
 			var wtd = new WordTagDict ();
             var fileRoot = @"C:\\Users\\Max1s\\Dropbox\\CompLing\\CompLing\\treeBank";
+			//var fileRoot = @"C:\Users\Max\Documents\treeBank\treeBank";
 			var directory = new DirectoryInfo(fileRoot);
 			foreach(var subDirectory in directory.GetDirectories())
 			{
@@ -57,7 +66,6 @@ namespace CLP
 				{
 
 					var lines = File.ReadAllLines (file.FullName);
-
                     var previousTag = "START";
 				    var word = "";
 					var tag = "";
