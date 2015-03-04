@@ -1,28 +1,32 @@
-﻿using System;
+﻿using CompLing;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
 namespace CLP
 {
-	public class Viterbi
+	public class Viterbi //class where all of the viterbi algorithm computation is done.
 	{
-		WordTagDict learntDictionary;
-        List<List<string>> testSentences;
-        List<List<Tuple<string, string>>> testSentencesWithTag;
-        List<List<Tuple<string, string>>> testPredictions;
-        List<string> tags;
+		WordTagDict learntDictionary; //our known corpus
+        List<List<string>> testSentences; //our test sentences sans tags
+        List<List<Tuple<string, string>>> testSentencesWithTag; // .. with tags
+        List<List<Tuple<string, string>>> testPredictions; // our predictions of the tags
+        List<string> tags; //list of possible tags
+        NaiveBayes nbs; //our naiveBayes information.
 
-
-        public Viterbi(WordTagDict wtd, List<List<Tuple<string, string>>> tswt)
+        public Viterbi(WordTagDict wtd, List<List<Tuple<string, string>>> tswt, NaiveBayes nb) //constructor takes in most things listed above
         {
             learntDictionary = wtd;
             testSentencesWithTag = tswt;
-            testSentences = testSentencesWithTag.Select(x => x.Select(y => y.Item1).ToList()).ToList();
+            testSentences = testSentencesWithTag.Select(x => x.Select(y => y.Item1).ToList()).ToList(); //some clever LINQ, strips the dictionary and leaves just the words
             tags = learntDictionary.Keys;
+            nbs = nb;
+
         }
 
-        public double WordGivenTag(string word, string tag)
+        // returns the probability of the word given the tag
+        public double WordGivenTag(string word, string tag) 
         {
           
             var learntInfo = learntDictionary[tag, true];
@@ -33,7 +37,21 @@ namespace CLP
             
         }
 
-        public double TagGivenTag(string thisTag, string previousTag)
+        //returns the probability of the word given tag with Bayes context
+        public double WordGivenTag(string word, string tag, List<string> context)
+        {
+
+            var learntInfo = learntDictionary[tag, true];
+            if (learntInfo.ContainsKey(word))
+                return learntInfo[word];
+            else
+            {
+                return nbs.EstimateProbabilityBasedOnFeatures(tag, word, context);
+            }
+        }
+
+        //returns the probability of the tag given the tag
+        public double TagGivenTag(string thisTag, string previousTag) 
         {
             var learntInfo = learntDictionary[previousTag, false];
             if (learntInfo.ContainsKey(thisTag))
@@ -42,18 +60,18 @@ namespace CLP
                 return 0.001d;
         }
 
-        public float Test()
+        public float Test() //main loop, iterating through all the sentences
 		{
             var percentageCorrect = new List<float>();
             for (int sentence = 0; sentence < testSentences.Count; sentence++)
             {
                 percentageCorrect.Add(Compare(TestSentence(testSentences[sentence]), testSentencesWithTag[sentence]));
-                //Debug.WriteLine(percentageCorrect[sentence]);
             }
 
             return percentageCorrect.Average();
 		}
 
+        //MAIN VITERBI ALG.
         public List<Tuple<string, string>> TestSentence(List<string> sentence)
         {
             var score = Tools.CreateArray<double>(sentence.Count, tags.Count);
@@ -61,7 +79,8 @@ namespace CLP
 
             for (int j = 0; j < tags.Count; j++)
             {
-                score[0][j] = WordGivenTag(sentence[0], tags[j]) * TagGivenTag(tags[j], "START");
+              //  score[0][j] = WordGivenTag(sentence[0], tags[j]) * TagGivenTag(tags[j], "START");
+                score[0][j] = WordGivenTag(sentence[0], tags[j], sentence) * TagGivenTag(tags[j], "START");
 
             }
 
@@ -73,7 +92,8 @@ namespace CLP
                     int kPointer = 0;
                     for (int previousTag = 0; previousTag < tags.Count; previousTag++)
                     {
-                        double tempk = score[word - 1][previousTag] * TagGivenTag(tags[tag], tags[previousTag]) * WordGivenTag(sentence[word], tags[tag]);
+                        // double tempk = score[word - 1][previousTag] * TagGivenTag(tags[tag], tags[previousTag]) * WordGivenTag(sentence[word], tags[tag]);
+                        double tempk = score[word - 1][previousTag] * TagGivenTag(tags[tag], tags[previousTag]) * WordGivenTag(sentence[word], tags[tag], sentence);
                         if (tempk > maxKGenerated)
                         {
                             maxKGenerated = tempk;
@@ -81,7 +101,6 @@ namespace CLP
                         }
                     }
                     score[word][tag] = maxKGenerated;
-                    //Debug.WriteLine(word + " " + tag + " " + score[word, tag]);
                     scoreTracer[word][tag] = kPointer;
                 }
             }
@@ -89,7 +108,7 @@ namespace CLP
         }
 
 
-
+        // Implementation of the backpointer alg to generate our guess
         public List<Tuple<string, string>> AssembleGuess(List<string> sentence, List<string> tags, int[][] scoreTracer, int startingPointer)
         {
             var tagGuesses = new List<string>();
@@ -102,7 +121,6 @@ namespace CLP
 
             }
             tagGuesses.Reverse();
-            //Debug.WriteLine(tagGuesses.Count + " " + sentence.Count);
             var zip = new List<Tuple<string, string>>();
             for( int i = 0; i < sentence.Count; i++) 
             {
@@ -111,7 +129,7 @@ namespace CLP
             return zip;
         }
 			
-
+        //Generates a percentage comparison given our guess and the actual result.
         public float Compare(List<Tuple<string, string>> guess, List<Tuple<string, string>> actual)
         {
             float percentage = 0f;

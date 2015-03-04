@@ -7,15 +7,13 @@ namespace CLP
 {
 	public class WordTagDict
 	{
-		internal  Dictionary<string, Dictionary<string, double>> wordEmissionDictionary = new Dictionary<string, Dictionary<string, double>>();
-		internal  Dictionary<string,  Dictionary<string, double>> tagTransitionDictionary = new Dictionary<string, Dictionary<string, double>>();
+		internal  Dictionary<string, Dictionary<string, double>> wordEmissionDictionary = new Dictionary<string, Dictionary<string, double>>(); //given Tag give probabilities on Word
+		internal  Dictionary<string,  Dictionary<string, double>> tagTransitionDictionary = new Dictionary<string, Dictionary<string, double>>(); // given Tag give probabilities on Next Tag
 
 
-		public WordTagDict ()
-		{
-		}
+		public WordTagDict (){} //Empty Constructor
 
-        public List<string> Keys
+        public List<string> Keys //Just get all the keys for enumeration
         {
             get
             {
@@ -23,7 +21,7 @@ namespace CLP
             }
         }
 
-		public Dictionary<string, double> this[string tag, bool emission]
+		public Dictionary<string, double> this[string tag, bool emission] //accessor so that this object can be directly accessed.
 		{
 			get
 			{
@@ -43,7 +41,7 @@ namespace CLP
 		}
 
 
-        public void EditWordEmission(string tag, string word)
+        public void EditWordEmission(string tag, string word) //Edit the internal word emmission dictionary
         {
             if (wordEmissionDictionary.ContainsKey(tag))
             {
@@ -65,7 +63,7 @@ namespace CLP
             }
         }
 
-		public void EditTransition(string thisTag, string thatTag)
+		public void EditTransition(string thisTag, string thatTag) //Edit the internal Tag -> nextTag dict.
 		{
             if (tagTransitionDictionary.ContainsKey(thisTag))
             {
@@ -87,7 +85,7 @@ namespace CLP
             }
 		}
 
-        public void NormalizeDictionary()
+        public void NormalizeDictionary() //Normalize the values after they are read in so that we get vals as percentages
         {
 
             var keys = new List<string>(wordEmissionDictionary.Keys);
@@ -116,14 +114,7 @@ namespace CLP
                 }
             }
 
-
         }
-    /*    var dictionary = new Dictionary<string, double>();
-var keys = new List<string>(dictionary.Keys);
-foreach (string key in keys)
-{
-   dictionary[key] = Math.Round(dictionary[key], 3);
-} */
 
 	}
 }

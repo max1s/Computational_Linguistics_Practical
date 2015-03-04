@@ -9,18 +9,25 @@ using System.Threading.Tasks;
 
 namespace CompLing
 {
-    static class AutomatedTester
+    public static class AutomatedTester
     {
-
+        //just systematically goes through creating the objects and then using cross validation in the two loops
         public static void FullTest(string outputFileName)
         {
             StreamWriter file = new System.IO.StreamWriter(outputFileName);
             Parser p = new Parser();
-            WordTagDict fullCorpus = p.ParseTrainingText("None");
-            fullCorpus.NormalizeDictionary();
+
+            Console.WriteLine("Generating Naive Bayes Knowledge...");
+            NaiveBayes nbs = p.GenerateBayes();
+
 
             var unseenText = new List<List<Tuple<string, string>>>();
             var result = new List<float>();
+
+            WordTagDict fullCorpus = p.ParseTrainingText("None");
+            fullCorpus.NormalizeDictionary();
+
+            //first loop for the 100%
             for (int i = 2; i < 13; i++)
             {
                 if (i < 10)
@@ -31,10 +38,10 @@ namespace CompLing
                 {
                     unseenText = p.ParseUnseenText(i.ToString());
                 }
-                Viterbi alg = new Viterbi(fullCorpus, unseenText);
+                Viterbi alg = new Viterbi(fullCorpus, unseenText, nbs);
                 result.Add(alg.Test());
-                Console.WriteLine(i.ToString() + " " + result[i-2].ToString());
-                file.WriteLine(i.ToString() + " " + result[i-2].ToString());
+                Console.WriteLine(i.ToString() + " " + result[i - 2].ToString());
+                file.WriteLine(i.ToString() + " " + result[i - 2].ToString());
             }
 
             Console.WriteLine("AVG: " + result.Average().ToString());
@@ -48,7 +55,6 @@ namespace CompLing
             {
                 WordTagDict ninetyCorpus = p.ParseTrainingText(i.ToString());
                 ninetyCorpus.NormalizeDictionary();
-
                 if (i < 10)
                 {
                     unseenText = p.ParseUnseenText("0" + i.ToString());
@@ -58,7 +64,7 @@ namespace CompLing
                     unseenText = p.ParseUnseenText(i.ToString());
                 }
 
-                Viterbi alg = new Viterbi(ninetyCorpus, unseenText);
+                Viterbi alg = new Viterbi(ninetyCorpus, unseenText.Take(30).ToList(), nbs);
                 result.Add(alg.Test());
                 Console.WriteLine(i.ToString() + " " + result[i-2].ToString());
                 file.WriteLine(i.ToString() + " " + result[i-2].ToString());

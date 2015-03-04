@@ -4,7 +4,7 @@ namespace CLP
 {
 	public static class Tools
 	{
-
+        //useful maxPointer in Array tool
 		public static int MaxPointer(double[] vals)
 		{
 			double max = 0d;
@@ -21,6 +21,7 @@ namespace CLP
             return maxPointer;
 		}
 
+        //Useful, create Jagged Array  in one line tool.
 		public static T[][] CreateArray<T>(int rows, int cols)
 		{
 			T[][] array = new T[rows][];
