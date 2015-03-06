@@ -38,7 +38,7 @@ namespace CompLing
                 {
                     unseenText = p.ParseUnseenText(i.ToString());
                 }
-                Viterbi alg = new Viterbi(fullCorpus, unseenText, nbs);
+                Viterbi alg = new Viterbi(fullCorpus, unseenText.Take(30).ToList(), nbs);
                 result.Add(alg.Test());
                 Console.WriteLine(i.ToString() + " " + result[i - 2].ToString());
                 file.WriteLine(i.ToString() + " " + result[i - 2].ToString());
